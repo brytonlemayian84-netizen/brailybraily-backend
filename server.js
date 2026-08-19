@@ -6,12 +6,13 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const KEY = process.env.GEMINI_API_KEY;
+
 const ai = KEY ? new GoogleGenAI({ apiKey: KEY }) : null;
 
 app.get("/", (req, res) => {
     res.json({
         status: "online",
-        service: "Braily AI Backend"
+        service: "Braily Universal AI"
     });
 });
 
@@ -34,13 +35,15 @@ app.post("/ask", async (req, res) => {
             contents: question,
             config: {
                 systemInstruction:
-                    "You are Braily, a helpful general-purpose AI assistant. " +
-                    "Answer the user's actual question directly and naturally. " +
-                    "You can help with education, school subjects, work, science, " +
-                    "technology, mathematics, programming, writing, everyday life, " +
-                    "planning, explanations, and general knowledge. " +
-                    "Adapt your explanation to the user's question and provide " +
-                    "clear, useful answers. Do not assume the question is about physics."
+                    "You are Braily, a capable general-purpose AI assistant. " +
+                    "Answer the user's actual question rather than assuming a subject. " +
+                    "You can help with education, mathematics, physics, chemistry, " +
+                    "biology, technology, programming, work, writing, creativity, " +
+                    "everyday life, explanations, problem solving and general knowledge. " +
+                    "Give clear, useful and appropriately detailed answers. " +
+                    "For difficult questions, reason carefully and explain the result. " +
+                    "If information is uncertain or unavailable, say so rather than " +
+                    "inventing facts. Never claim to know everything."
             }
         });
 
@@ -56,7 +59,7 @@ app.post("/ask", async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Braily Gemini error:", error);
+        console.error("Braily error:", error);
 
         res.status(500).json({
             error: "Braily could not generate an answer."
@@ -65,5 +68,7 @@ app.post("/ask", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log("Braily backend running on port " + PORT);
+    console.log(
+        "Braily Universal AI running on port " + PORT
+    );
 });

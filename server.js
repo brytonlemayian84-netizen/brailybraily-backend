@@ -2,19 +2,11 @@ const express = require("express");
 const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
-
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.GEMINI_API_KEY;
-
-if (!API_KEY) {
-    console.error("GEMINI_API_KEY is missing.");
-}
-
-const ai = API_KEY
-    ? new GoogleGenAI({ apiKey: API_KEY })
-    : null;
+const KEY = process.env.GEMINI_API_KEY;
+const ai = KEY ? new GoogleGenAI({ apiKey: KEY }) : null;
 
 app.get("/", (req, res) => {
     res.json({
@@ -24,65 +16,54 @@ app.get("/", (req, res) => {
 });
 
 app.post("/ask", async (req, res) => {
-
     try {
-
-        if (!ai) {
+        if (!ai)
             return res.status(500).json({
                 error: "Gemini API key is not configured."
             });
-        }
 
-        const question = req.body.question;
+        const question = String(req.body.question || "").trim();
 
-        if (!question ||
-            typeof question !== "string") {
-
+        if (!question)
             return res.status(400).json({
                 error: "Question is required."
             });
-        }
 
-        const response =
-            await ai.models.generateContent({
+        const result = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: question,
+            config: {
+                systemInstruction:
+                    "You are Braily, a helpful general-purpose AI assistant. " +
+                    "Answer the user's actual question directly and naturally. " +
+                    "You can help with education, school subjects, work, science, " +
+                    "technology, mathematics, programming, writing, everyday life, " +
+                    "planning, explanations, and general knowledge. " +
+                    "Adapt your explanation to the user's question and provide " +
+                    "clear, useful answers. Do not assume the question is about physics."
+            }
+        });
 
-                model: "gemini-2.5-flash",
+        const answer = result.text;
 
-                contents:
-                    "You are Braily, a helpful AI assistant. " +
-                    "Answer clearly and naturally. " +
-                    "The user asked: " +
-                    question
+        if (!answer || !answer.trim())
+            return res.status(502).json({
+                error: "Gemini returned no answer."
             });
-
-        const answer =
-            response.text || "";
-
-        if (!answer) {
-            return res.status(500).json({
-                error: "Gemini returned an empty response."
-            });
-        }
 
         res.json({
-            answer: answer
+            answer: answer.trim()
         });
 
     } catch (error) {
-
-        console.error(
-            "Gemini error:",
-            error
-        );
+        console.error("Braily Gemini error:", error);
 
         res.status(500).json({
-            error: "Gemini request failed."
+            error: "Braily could not generate an answer."
         });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(
-        "Braily backend running on port " + PORT
-    );
+    console.log("Braily backend running on port " + PORT);
 });
